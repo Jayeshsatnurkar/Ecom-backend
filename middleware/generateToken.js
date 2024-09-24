@@ -3,12 +3,11 @@ import jwt from 'jsonwebtoken'
 import { dataModel} from '../models/dataSchema.js'
 
 dotenv.config({path:"./config.env"})
-
 let generateToken = async (user) => {
     try{
 
         let options = {
-            expiresIn : "2hr"
+            expiresIn : "1hr"
         }
 
         let payload = {
@@ -20,20 +19,18 @@ let generateToken = async (user) => {
         // store token in database for further check !
 
         if(!token){
-            throw("unable to genrate token !")
+            throw("unable to generate token !")
         }
 
-        console.log(user)
-
-        let result = await dataModel.updateOne({ email: user } , {$set: { token : token } } )
-
-        console.log(result)
-
+        
+        let result = await dataModel.updateOne({ email: user } , {$set:{ token : token } })
+            
         return token
 
     }catch(err){
         console.log("error while generating a token ! " , err)
     }
+    
 }
 
 export {generateToken}

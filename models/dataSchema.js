@@ -12,7 +12,8 @@ let dataSchema = mongoose.Schema({
     address:String,
     dob:String,
     password:String,
-    timeStamp:String
+    timeStamp:String,
+    token:String
 })
 
  dataSchema.pre('save', async function(){

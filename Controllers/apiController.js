@@ -1,8 +1,8 @@
 import { generateToken } from '../middleware/generateToken.js'
 import { dataModel} from '../models/dataSchema.js'
-import { generateToken } from '../middleware/generateToken.js'
+import { adminModel } from '../models/adminSchema.js'
+import { productModel } from '../models/productSchema.js'
 import bcrypt from 'bcrypt'
-
 
 let PostAcceptForm = async (req, res) => {
 
@@ -24,37 +24,52 @@ let PostAcceptForm = async (req, res) => {
         }
     } catch (err) {
         console.log("unable to save data into database", err)
-        res.status(200).json({ messege: err })
+        res.status(400).json({ messege: err })
     }
 }
 
-let LoginForm= async(req,res)=>{
-    let userData=req.body
-        //data ={email, password}
-        //console.log(data)
+let LoginForm = async(req,res)=>{
+   
     try{
+        let userData=req.body
         
         let checkEntry =await dataModel.findOne({email:userData.email})
         //if user exists the checkEntry will have object from database
-           console.log(checkEntry)
+       // console.log(checkEntry)
         if(!checkEntry){
             throw ("User email does not exists !")
         }
         //compare password with encrypted password
 
-        let  result =  await bcrypt.compare(userData.password,checkEntry.password)
+        let result = await bcrypt.compare(userData.password,checkEntry.password)
+       // console.log(result)
 
         if(!result){
             throw ("wrong email or password!")
         }
-
-        let token =await generateToken(checkEntry.email)
+        
+        let token = await generateToken(checkEntry.email)
         console.log(token)
+       
         res.status(202).json({messege:"user login is successfull","i am ":checkEntry.email,token:token})
     }catch(err){
 
         console.log("unable to login !",err)
         res.status(400).json({messege:err})
+    }
+}
+
+let FetchData = async (req, res) => {
+    // console.log("FetchData is called !")
+    try {
+        let result = await dataModel.find({})
+
+        if (result.length == 0) {
+            throw ("unable to get data")
+        }
+        res.status(200).json({ message: "Get the data from database", database: result })
+    } catch (err) {
+        res.status(400).json({ message: "unable to get data", err })
     }
 }
 
@@ -70,4 +85,66 @@ let clientDashboard = async (req,res) =>{
     }
 }
 
-export {PostAcceptForm,LoginForm,clientDashboard}
+let adminData= async(req,res)=>{
+    let data = req.body
+    console.log(data)
+    try {
+        let checkIfUnique = await adminModel.findOne({ $or: [{ name: data.name }, { email: data.email }] })
+
+        if (checkIfUnique) {
+            throw ('User already exists !')
+        } else {
+
+            let instanceDataModel = new adminModel(data)
+
+            await instanceDataModel.save()
+
+            res.status(200).json({ messege: "data has been saved into database !" })
+        }
+    } catch (err) {
+        console.log("unable to save data into database", err)
+        res.status(400).json({ messege: err })
+    }
+}
+
+let  adminLogin = async(req,res)=>{
+    try{
+        let data = req.body
+            console.log(data)
+        let check = await adminModel.findOne({email:data.email})
+
+        if(!check){
+            throw ("User email does not exists !")
+        }
+        let result = await bcrypt.compare(data.password,check.password)
+        // console.log(result)
+ 
+         if(!result){
+             throw ("wrong email or password!")
+         }
+        
+         let token = await generateToken(check.email)
+         console.log(token)
+        
+         res.status(202).json({messege:"admin login is successfull","i am ":check.email,token:token})
+    }catch(err){
+        
+    }
+}
+
+let productData =async(req,res)=>{
+    let data =req.body
+    try{
+        
+        const saveProduct = new productModel(data)
+
+        await saveProduct.save()
+        
+        res.status(201).json(saveProduct)
+    }catch(err){
+        console.log("unable to save product in database !")
+        res.status(400).json({message:err})
+    }
+}
+
+export {PostAcceptForm,LoginForm,FetchData,clientDashboard,adminData,adminLogin,productData}

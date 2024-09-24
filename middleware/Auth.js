@@ -15,7 +15,7 @@ let authUser = async (req,res,next) =>{
         if(!isUserValid){
             throw('invalid token !')
         }
-        console.log(isUserValid.userId)
+        console.log(isUserValid)
 
         let customerData =await dataModel.findOne({email:isUserValid.userId, token:userToken})
 
